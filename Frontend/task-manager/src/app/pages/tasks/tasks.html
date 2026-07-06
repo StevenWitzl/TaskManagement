@@ -1,0 +1,120 @@
+<header class="topbar">
+  <div>
+    <h1>My Tasks</h1>
+    <p class="signed-in">{{ email() }}</p>
+  </div>
+  <div class="topbar-right">
+    <span class="status" [class.online]="connected()">
+      {{ connected() ? 'Live' : 'Offline' }}
+    </span>
+    <button type="button" class="ghost" (click)="logout()">Sign out</button>
+  </div>
+</header>
+
+<main class="page">
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <section class="add-card">
+    <h2>Add a task</h2>
+    <form (ngSubmit)="addTask()">
+      <div class="row">
+        <label class="grow">
+          Title
+          <input name="title" [(ngModel)]="title" placeholder="What needs doing?" required />
+        </label>
+        <label>
+          Priority
+          <select name="priority" [(ngModel)]="priority">
+            <option [value]="Priority.Low">Low</option>
+            <option [value]="Priority.Medium">Medium</option>
+            <option [value]="Priority.High">High</option>
+          </select>
+        </label>
+      </div>
+      <label>
+        Description
+        <textarea
+          name="description"
+          [(ngModel)]="description"
+          rows="2"
+          placeholder="Add some detail…"
+          required
+        ></textarea>
+      </label>
+      <button class="primary" type="submit">Add task</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Open <span class="count">{{ openTasks().length }}</span></h2>
+    @if (openTasks().length === 0) {
+      <p class="empty">Nothing open — add a task above.</p>
+    }
+    @for (task of openTasks(); track task.id) {
+      <article class="task">
+        <div class="order-controls">
+          <button type="button" (click)="move(task, -1)" [disabled]="task.order === 1" aria-label="Move up">▲</button>
+          <span class="order">{{ task.order }}</span>
+          <button type="button" (click)="move(task, 1)" aria-label="Move down">▼</button>
+        </div>
+        <div class="body">
+          <div class="title-row">
+            <h3>{{ task.title }}</h3>
+            <span class="priority" [class]="'priority p-' + task.priority">
+              {{ priorityLabels[task.priority] }}
+            </span>
+          </div>
+          <p class="description">{{ task.description }}</p>
+          <p class="meta">Created {{ task.createdDate | date: 'medium' }}</p>
+
+          @if (completingTaskId() === task.id) {
+            <div class="complete-form">
+              <input
+                name="completionDescription"
+                [(ngModel)]="completionDescription"
+                placeholder="How was it completed?"
+              />
+              <button type="button" class="primary" (click)="confirmComplete(task)">Complete</button>
+              <button type="button" class="ghost" (click)="cancelCompleting()">Cancel</button>
+            </div>
+          } @else {
+            <div class="actions">
+              <button type="button" class="primary" (click)="startCompleting(task)">Mark complete</button>
+              <button type="button" class="danger" (click)="remove(task)">Delete</button>
+            </div>
+          }
+        </div>
+      </article>
+    }
+  </section>
+
+  @if (completedTasks().length > 0) {
+    <section>
+      <h2>Completed <span class="count">{{ completedTasks().length }}</span></h2>
+      @for (task of completedTasks(); track task.id) {
+        <article class="task done">
+          <div class="order-controls">
+            <span class="order">{{ task.order }}</span>
+          </div>
+          <div class="body">
+            <div class="title-row">
+              <h3>{{ task.title }}</h3>
+              <span class="priority" [class]="'priority p-' + task.priority">
+                {{ priorityLabels[task.priority] }}
+              </span>
+            </div>
+            <p class="description">{{ task.description }}</p>
+            <p class="meta">
+              Completed {{ task.completedDate | date: 'medium' }} — {{ task.completedDescription }}
+            </p>
+            <div class="actions">
+              <button type="button" class="danger" (click)="remove(task)">Delete</button>
+            </div>
+          </div>
+        </article>
+      }
+    </section>
+  }
+</main>

@@ -427,3 +427,12 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# TaskManagement: local SQLite database (created and seeded on startup)
+*.db
+*.db-shm
+*.db-wal
+
+# TaskManagement: Angular build output and cache
+Frontend/task-manager/dist/
+Frontend/task-manager/.angular/

@@ -1,0 +1,61 @@
+<main class="landing">
+  <section class="card">
+    <h1>Task Management</h1>
+    <p class="subtitle">Stay on top of your work, in real time.</p>
+
+    <div class="tabs">
+      <button
+        type="button"
+        [class.active]="mode() === 'signin'"
+        (click)="setMode('signin')"
+      >
+        Sign in
+      </button>
+      <button
+        type="button"
+        [class.active]="mode() === 'register'"
+        (click)="setMode('register')"
+      >
+        Create account
+      </button>
+    </div>
+
+    <form (ngSubmit)="submit()">
+      <label>
+        Email
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+      </label>
+
+      <label>
+        Password
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          [placeholder]="mode() === 'register' ? 'At least 6 characters' : 'Your password'"
+          [autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
+          required
+        />
+      </label>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <button class="primary" type="submit" [disabled]="busy()">
+        {{ busy() ? 'Please wait…' : mode() === 'signin' ? 'Sign in' : 'Create account' }}
+      </button>
+    </form>
+
+    <p class="hint">
+      Demo account: <code>demo&#64;taskmanagement.local</code> / <code>Demo123!</code>
+    </p>
+  </section>
+</main>
