@@ -87,19 +87,6 @@ public class CreateTaskCommandHandlerTests : IDisposable
         Assert.Equal("Also padded", result.Description);
     }
 
-    [Theory]
-    [InlineData("", "Description")]
-    [InlineData("   ", "Description")]
-    [InlineData("Title", "")]
-    [InlineData("Title", "   ")]
-    public async Task Handle_ThrowsValidation_WhenTitleOrDescriptionMissing(string title, string description)
-    {
-        var user = _db.AddUser();
-
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(new CreateTaskCommand(user.Id, title, description, Priority.Medium), CancellationToken.None));
-    }
-
     [Fact]
     public async Task Handle_BroadcastsUpdatedTaskListToOwner()
     {

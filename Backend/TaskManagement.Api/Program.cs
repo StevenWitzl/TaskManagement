@@ -1,8 +1,10 @@
 using System.Text;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TaskManagement.Api.Application.Auth;
+using TaskManagement.Api.Application.Behaviors;
 using TaskManagement.Api.Application.Common;
 using TaskManagement.Api.Application.Tasks;
 using TaskManagement.Api.Hubs;
@@ -23,8 +25,14 @@ builder.Logging.AddSimpleConsole(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
-// CQRS via MediatR
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+// CQRS via MediatR, with cross-cutting concerns as pipeline behaviors
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+});
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 // Application services
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()

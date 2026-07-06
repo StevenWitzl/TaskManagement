@@ -30,27 +30,9 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, A
 
     public async Task<AuthResponseDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
+        // Input shape is validated by RegisterUserCommandValidator in the pipeline;
+        // this handler only enforces business rules (e.g. unique email).
         var email = request.Email.Trim().ToLowerInvariant();
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new ValidationException("Email is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
-        {
-            throw new ValidationException("Password must be at least 6 characters.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.FirstName))
-        {
-            throw new ValidationException("First name is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.LastName))
-        {
-            throw new ValidationException("Last name is required.");
-        }
 
         var exists = await _db.Users.AnyAsync(u => u.Email == email, cancellationToken);
         if (exists)

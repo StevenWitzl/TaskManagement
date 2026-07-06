@@ -66,34 +66,5 @@ public class RegisterUserCommandHandlerTests : IDisposable
             _handler.Handle(Command(email: "taken@test.local"), CancellationToken.None));
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public async Task Handle_ThrowsValidation_WhenEmailMissing(string email)
-    {
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(Command(email: email), CancellationToken.None));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("12345")]
-    public async Task Handle_ThrowsValidation_WhenPasswordTooShort(string password)
-    {
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(Command(password: password), CancellationToken.None));
-    }
-
-    [Theory]
-    [InlineData("", "Lovelace")]
-    [InlineData("   ", "Lovelace")]
-    [InlineData("Ada", "")]
-    [InlineData("Ada", "   ")]
-    public async Task Handle_ThrowsValidation_WhenNameMissing(string firstName, string lastName)
-    {
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(Command(firstName: firstName, lastName: lastName), CancellationToken.None));
-    }
-
     public void Dispose() => _db.Dispose();
 }

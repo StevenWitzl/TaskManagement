@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using TaskManagement.Api.Application.Common;
 using TaskManagement.Api.Domain;
 using TaskManagement.Api.Infrastructure;
 
@@ -24,16 +23,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, TaskD
 
     public async Task<TaskDto> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Title))
-        {
-            throw new ValidationException("Title is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Description))
-        {
-            throw new ValidationException("Description is required.");
-        }
-
+        // Input shape is validated by CreateTaskCommandValidator in the pipeline.
         var maxOrder = await _db.Tasks
             .Where(t => t.UserId == request.UserId && t.CompletedDate == null)
             .Select(t => (int?)t.Order)

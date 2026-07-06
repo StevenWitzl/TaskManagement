@@ -1,5 +1,7 @@
 # TaskManagement
 
+[![CI](https://github.com/StevenWitzl/TaskManagement/actions/workflows/ci.yml/badge.svg)](https://github.com/StevenWitzl/TaskManagement/actions/workflows/ci.yml)
+
 A small full-stack task manager: ASP.NET Core + SQLite on the back end, React on the front end, with a real-time task view over SignalR (WebSockets).
 
 ## Quick start
@@ -24,8 +26,9 @@ TaskManagement/
 │   ├── TaskManagement.Api/            ASP.NET Core Web API
 │   │   ├── Domain/                    Entities: User, TaskItem, Priority
 │   │   ├── Application/
-│   │   │   ├── Auth/                  Register/Login commands + JWT service + DTOs
-│   │   │   ├── Tasks/                 Task commands/queries + DTOs + ITaskNotifier
+│   │   │   ├── Auth/                  Register/Login commands + validators + JWT service
+│   │   │   ├── Tasks/                 Task commands/queries + validators + ITaskNotifier
+│   │   │   ├── Behaviors/             MediatR pipeline: validation + logging
 │   │   │   └── Common/                Password hasher, typed exceptions
 │   │   ├── Infrastructure/            EF Core DbContext (SQLite), startup seeder
 │   │   ├── Controllers/               Thin endpoints: DTO in → MediatR → DTO out
@@ -47,6 +50,8 @@ TaskManagement/
 ## How it works
 
 **CQRS with MediatR.** Controllers accept DTOs and dispatch commands/queries through MediatR. Handlers map DTOs to EF Core entities, persist to SQLite, and raise a broadcast. Reads and writes are separate request types (`GetTasksQuery` vs `CreateTaskCommand`, `CompleteTaskCommand`, `ReorderTaskCommand`, `DeleteTaskCommand`).
+
+**Cross-cutting concerns as pipeline behaviors.** Every request flows through `LoggingBehavior` (logs each command/query with its duration) and `ValidationBehavior` (runs the request's FluentValidation validators and rejects invalid input before it reaches a handler). Handlers only contain business rules — input-shape validation lives in per-command validators, and failures surface as a 400 with the aggregated messages.
 
 **Real-time view.** The React tasks page never polls: on connect, `TasksHub` pushes the user's full task list over the WebSocket, and every successful command re-broadcasts the updated list to that user's group. The `useRealtime` hook exposes it as React state that the page renders directly.
 
@@ -78,7 +83,9 @@ cd Backend
 dotnet test
 ```
 
-Unit tests cover every command/query handler (including ownership and validation edge cases), the password hasher, the JWT service, and the hub's connect behavior. Handlers run against an in-memory SQLite database; SignalR and JWT dependencies are mocked behind interfaces (`ITaskNotifier`, `IJwtTokenService`).
+Unit tests cover every command/query handler (including ownership edge cases), all FluentValidation validators, the validation pipeline behavior, the password hasher, the JWT service, and the hub's connect behavior. Handlers run against an in-memory SQLite database; SignalR and JWT dependencies are mocked behind interfaces (`ITaskNotifier`, `IJwtTokenService`).
+
+CI (GitHub Actions) runs the backend test suite and the frontend type-check/build on every push and pull request — see `.github/workflows/ci.yml`.
 
 ## Manual run (without Run.cmd)
 
