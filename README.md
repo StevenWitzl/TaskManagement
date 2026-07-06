@@ -52,7 +52,7 @@ TaskManagement/
 
 **Auth.** Registration requires email, password, and first/last name (all validated server-side); login issues a JWT (passwords stored as PBKDF2 hashes). The token authenticates both HTTP calls and the SignalR connection (via query-string token). Each user only ever sees their own tasks, and the signed-in user's name is shown in the header.
 
-**Task model.** `Order`, `Priority`, `Title`, `Description`, `CreatedDate` are required; `CompletedDate` (and an optional `CompletedDescription`) are set when a task is completed. `Order` is kept contiguous per user across create/reorder/delete — reordering is drag-and-drop in the UI.
+**Task model.** `Order`, `Priority`, `Title`, `Description`, `CreatedDate` are required; `CompletedDate` (and an optional `CompletedDescription`) are set when a task is completed. `Order` only applies to open tasks and is always contiguous from 1 — completing, deleting, or reordering renumbers the open list. Completed tasks drop out of the numbering and are shown in completion order. Reordering is drag-and-drop in the UI.
 
 **UI.** Tasks are created through a modal (+ Create task). The header shows the signed-in user's name plus live counts: open tasks by priority (High/Medium/Low), completed, and outstanding.
 

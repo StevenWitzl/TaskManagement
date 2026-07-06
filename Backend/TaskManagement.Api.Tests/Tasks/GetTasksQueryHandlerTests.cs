@@ -29,6 +29,20 @@ public class GetTasksQueryHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task Handle_ReturnsOpenByOrderThenCompletedByCompletionTime()
+    {
+        var user = _db.AddUser();
+        _db.AddTask(user.Id, order: 2, title: "Open B");
+        _db.AddTask(user.Id, order: 5, title: "Done later", completedDate: DateTime.UtcNow);
+        _db.AddTask(user.Id, order: 1, title: "Open A");
+        _db.AddTask(user.Id, order: 9, title: "Done earlier", completedDate: DateTime.UtcNow.AddHours(-2));
+
+        var result = await _handler.Handle(new GetTasksQuery(user.Id), CancellationToken.None);
+
+        Assert.Equal(new[] { "Open A", "Open B", "Done earlier", "Done later" }, result.Select(t => t.Title));
+    }
+
+    [Fact]
     public async Task Handle_ReturnsOnlyOwnTasks()
     {
         var alice = _db.AddUser("alice@test.local");

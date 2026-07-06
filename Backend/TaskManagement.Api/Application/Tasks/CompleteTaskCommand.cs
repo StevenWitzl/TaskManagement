@@ -22,9 +22,11 @@ public class CompleteTaskCommandHandler : IRequestHandler<CompleteTaskCommand, T
 
     public async Task<TaskDto> Handle(CompleteTaskCommand request, CancellationToken cancellationToken)
     {
-        var task = await _db.Tasks.FirstOrDefaultAsync(
-            t => t.Id == request.TaskId && t.UserId == request.UserId, cancellationToken);
+        var tasks = await _db.Tasks
+            .Where(t => t.UserId == request.UserId)
+            .ToListAsync(cancellationToken);
 
+        var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
         if (task is null)
         {
             throw new NotFoundException("Task not found.");
@@ -39,6 +41,9 @@ public class CompleteTaskCommandHandler : IRequestHandler<CompleteTaskCommand, T
         task.CompletedDescription = string.IsNullOrWhiteSpace(request.CompletedDescription)
             ? null
             : request.CompletedDescription.Trim();
+
+        // The completed task drops out of the open numbering; keep it contiguous from 1.
+        TaskOrdering.RenumberOpen(tasks);
         await _db.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Completed task {TaskId} for user {UserId}", task.Id, request.UserId);

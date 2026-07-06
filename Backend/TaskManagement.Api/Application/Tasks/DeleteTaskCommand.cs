@@ -32,16 +32,11 @@ public class DeleteTaskCommandHandler : IRequestHandler<DeleteTaskCommand, Unit>
 
         _db.Tasks.Remove(task);
 
-        // Keep Order values contiguous after a delete.
+        // Keep the open tasks' Order contiguous after a delete.
         var remaining = await _db.Tasks
             .Where(t => t.UserId == request.UserId && t.Id != request.TaskId)
-            .OrderBy(t => t.Order)
             .ToListAsync(cancellationToken);
-
-        for (var i = 0; i < remaining.Count; i++)
-        {
-            remaining[i].Order = i + 1;
-        }
+        TaskOrdering.RenumberOpen(remaining);
 
         await _db.SaveChangesAsync(cancellationToken);
 

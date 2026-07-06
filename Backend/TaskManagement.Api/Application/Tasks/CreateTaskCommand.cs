@@ -35,7 +35,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, TaskD
         }
 
         var maxOrder = await _db.Tasks
-            .Where(t => t.UserId == request.UserId)
+            .Where(t => t.UserId == request.UserId && t.CompletedDate == null)
             .Select(t => (int?)t.Order)
             .MaxAsync(cancellationToken) ?? 0;
 

@@ -20,9 +20,9 @@ public class GetTasksQueryHandler : IRequestHandler<GetTasksQuery, List<TaskDto>
         var tasks = await _db.Tasks
             .AsNoTracking()
             .Where(t => t.UserId == request.UserId)
-            .OrderBy(t => t.Order)
             .ToListAsync(cancellationToken);
 
-        return tasks.ToDtos();
+        // Open tasks by order, then completed tasks by completion time.
+        return TaskOrdering.Sorted(tasks).ToDtos();
     }
 }

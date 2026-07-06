@@ -80,6 +80,22 @@ public class CompleteTaskCommandHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task Handle_RenumbersRemainingOpenTasksFromOne()
+    {
+        var user = _db.AddUser();
+        var first = _db.AddTask(user.Id, order: 1, title: "A");
+        var second = _db.AddTask(user.Id, order: 2, title: "B");
+        var third = _db.AddTask(user.Id, order: 3, title: "C");
+
+        await _handler.Handle(new CompleteTaskCommand(user.Id, first.Id, "done"), CancellationToken.None);
+
+        _db.Context.Entry(second).Reload();
+        _db.Context.Entry(third).Reload();
+        Assert.Equal(1, second.Order); // open numbering always starts at 1
+        Assert.Equal(2, third.Order);
+    }
+
+    [Fact]
     public async Task Handle_BroadcastsUpdatedTaskList()
     {
         var user = _db.AddUser();

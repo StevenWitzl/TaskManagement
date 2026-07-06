@@ -75,6 +75,16 @@ public class ReorderTaskCommandHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task Handle_ThrowsNotFound_WhenTaskIsCompleted()
+    {
+        var user = _db.AddUser();
+        var completed = _db.AddTask(user.Id, order: 1, completedDate: DateTime.UtcNow);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            _handler.Handle(new ReorderTaskCommand(user.Id, completed.Id, 1), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Handle_ThrowsNotFound_WhenTaskBelongsToAnotherUser()
     {
         var owner = _db.AddUser("owner@test.local");

@@ -49,6 +49,19 @@ public class CreateTaskCommandHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task Handle_IgnoresCompletedTasksWhenAssigningOrder()
+    {
+        var user = _db.AddUser();
+        _db.AddTask(user.Id, order: 1);
+        _db.AddTask(user.Id, order: 7, completedDate: DateTime.UtcNow); // stale high order on a completed task
+
+        var result = await _handler.Handle(
+            new CreateTaskCommand(user.Id, "Next", "Description", Priority.Medium), CancellationToken.None);
+
+        Assert.Equal(2, result.Order);
+    }
+
+    [Fact]
     public async Task Handle_OrderIsPerUser()
     {
         var alice = _db.AddUser("alice@test.local");

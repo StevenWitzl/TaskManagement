@@ -18,10 +18,9 @@ public static class TaskBroadcaster
         var tasks = await db.Tasks
             .AsNoTracking()
             .Where(t => t.UserId == userId)
-            .OrderBy(t => t.Order)
             .ToListAsync(cancellationToken);
 
-        var dtos = tasks.ToDtos();
+        var dtos = TaskOrdering.Sorted(tasks).ToDtos();
         await notifier.BroadcastTasksAsync(userId, dtos, cancellationToken);
         return dtos;
     }

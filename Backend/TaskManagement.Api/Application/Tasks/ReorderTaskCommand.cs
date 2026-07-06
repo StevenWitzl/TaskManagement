@@ -22,15 +22,16 @@ public class ReorderTaskCommandHandler : IRequestHandler<ReorderTaskCommand, Lis
 
     public async Task<List<TaskDto>> Handle(ReorderTaskCommand request, CancellationToken cancellationToken)
     {
+        // Only open tasks participate in ordering.
         var tasks = await _db.Tasks
-            .Where(t => t.UserId == request.UserId)
+            .Where(t => t.UserId == request.UserId && t.CompletedDate == null)
             .OrderBy(t => t.Order)
             .ToListAsync(cancellationToken);
 
         var task = tasks.FirstOrDefault(t => t.Id == request.TaskId);
         if (task is null)
         {
-            throw new NotFoundException("Task not found.");
+            throw new NotFoundException("Task not found or already completed.");
         }
 
         // Move the task to the requested position (1-based, clamped), then renumber sequentially.

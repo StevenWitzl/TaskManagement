@@ -209,9 +209,6 @@ export function Tasks() {
             </h2>
             {completedTasks.map((task) => (
               <article className="task done" key={task.id}>
-                <div className="order-controls">
-                  <span className="order">{task.order}</span>
-                </div>
                 <div className="body">
                   <div className="title-row">
                     <h3>{task.title}</h3>
