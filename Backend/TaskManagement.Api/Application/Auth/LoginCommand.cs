@@ -39,6 +39,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
         _logger.LogInformation("User {Email} ({UserId}) signed in", user.Email, user.Id);
 
-        return new AuthResponseDto(user.Id, user.Email, _tokenService.CreateToken(user));
+        return new AuthResponseDto(user.Id, user.Email, user.FirstName, user.LastName, _tokenService.CreateToken(user));
     }
 }

@@ -18,13 +18,13 @@ if not exist node_modules (
     call npm install
     if errorlevel 1 goto :failpop
 )
-call npx ng build --configuration development
+call npm run build
 if errorlevel 1 goto :failpop
 popd
 
 echo.
 echo === Launching frontend on http://localhost:4200 ===
-start "TaskManagement UI" cmd /k "cd /d "%~dp0Frontend\task-manager" && npx ng serve --open"
+start "TaskManagement UI" cmd /k "cd /d "%~dp0Frontend\task-manager" && npm run dev -- --open"
 
 echo.
 echo ============================================================

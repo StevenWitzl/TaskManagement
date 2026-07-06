@@ -29,6 +29,8 @@ public class AppDbContext : DbContext
             user.HasKey(u => u.Id);
             user.Property(u => u.Email).IsRequired().HasMaxLength(256);
             user.HasIndex(u => u.Email).IsUnique();
+            user.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
+            user.Property(u => u.LastName).IsRequired().HasMaxLength(100);
             user.Property(u => u.PasswordHash).IsRequired();
             user.Property(u => u.CreatedDate).IsRequired();
         });

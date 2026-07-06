@@ -5,7 +5,7 @@ using TaskManagement.Api.Infrastructure;
 
 namespace TaskManagement.Api.Application.Tasks;
 
-public record CompleteTaskCommand(Guid UserId, Guid TaskId, string CompletedDescription) : IRequest<TaskDto>;
+public record CompleteTaskCommand(Guid UserId, Guid TaskId, string? CompletedDescription) : IRequest<TaskDto>;
 
 public class CompleteTaskCommandHandler : IRequestHandler<CompleteTaskCommand, TaskDto>
 {
@@ -22,11 +22,6 @@ public class CompleteTaskCommandHandler : IRequestHandler<CompleteTaskCommand, T
 
     public async Task<TaskDto> Handle(CompleteTaskCommand request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.CompletedDescription))
-        {
-            throw new ValidationException("A completion description is required.");
-        }
-
         var task = await _db.Tasks.FirstOrDefaultAsync(
             t => t.Id == request.TaskId && t.UserId == request.UserId, cancellationToken);
 
@@ -41,7 +36,9 @@ public class CompleteTaskCommandHandler : IRequestHandler<CompleteTaskCommand, T
         }
 
         task.CompletedDate = DateTime.UtcNow;
-        task.CompletedDescription = request.CompletedDescription.Trim();
+        task.CompletedDescription = string.IsNullOrWhiteSpace(request.CompletedDescription)
+            ? null
+            : request.CompletedDescription.Trim();
         await _db.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Completed task {TaskId} for user {UserId}", task.Id, request.UserId);

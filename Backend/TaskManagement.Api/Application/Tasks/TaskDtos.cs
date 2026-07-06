@@ -14,6 +14,6 @@ public record TaskDto(
 
 public record CreateTaskRequestDto(string Title, string Description, Priority Priority);
 
-public record CompleteTaskRequestDto(string CompletedDescription);
+public record CompleteTaskRequestDto(string? CompletedDescription);
 
 public record ReorderTaskRequestDto(int NewOrder);

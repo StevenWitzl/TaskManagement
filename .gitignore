@@ -433,6 +433,5 @@ FodyWeavers.xsd
 *.db-shm
 *.db-wal
 
-# TaskManagement: Angular build output and cache
+# TaskManagement: frontend build output
 Frontend/task-manager/dist/
-Frontend/task-manager/.angular/

@@ -64,15 +64,19 @@ public class CompleteTaskCommandHandlerTests : IDisposable
     }
 
     [Theory]
+    [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task Handle_ThrowsValidation_WhenCompletionDescriptionMissing(string description)
+    public async Task Handle_AllowsMissingCompletionDescription(string? description)
     {
         var user = _db.AddUser();
         var task = _db.AddTask(user.Id, order: 1);
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(new CompleteTaskCommand(user.Id, task.Id, description), CancellationToken.None));
+        var result = await _handler.Handle(
+            new CompleteTaskCommand(user.Id, task.Id, description), CancellationToken.None);
+
+        Assert.NotNull(result.CompletedDate);
+        Assert.Null(result.CompletedDescription); // blank input normalizes to null
     }
 
     [Fact]

@@ -6,7 +6,8 @@ using TaskManagement.Api.Infrastructure;
 
 namespace TaskManagement.Api.Application.Auth;
 
-public record RegisterUserCommand(string Email, string Password) : IRequest<AuthResponseDto>;
+public record RegisterUserCommand(string Email, string Password, string FirstName, string LastName)
+    : IRequest<AuthResponseDto>;
 
 public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, AuthResponseDto>
 {
@@ -41,6 +42,16 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, A
             throw new ValidationException("Password must be at least 6 characters.");
         }
 
+        if (string.IsNullOrWhiteSpace(request.FirstName))
+        {
+            throw new ValidationException("First name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.LastName))
+        {
+            throw new ValidationException("Last name is required.");
+        }
+
         var exists = await _db.Users.AnyAsync(u => u.Email == email, cancellationToken);
         if (exists)
         {
@@ -51,6 +62,8 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, A
         {
             Id = Guid.NewGuid(),
             Email = email,
+            FirstName = request.FirstName.Trim(),
+            LastName = request.LastName.Trim(),
             PasswordHash = _passwordHasher.Hash(request.Password),
             CreatedDate = DateTime.UtcNow
         };
@@ -60,6 +73,6 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, A
 
         _logger.LogInformation("Registered new user {Email} ({UserId})", user.Email, user.Id);
 
-        return new AuthResponseDto(user.Id, user.Email, _tokenService.CreateToken(user));
+        return new AuthResponseDto(user.Id, user.Email, user.FirstName, user.LastName, _tokenService.CreateToken(user));
     }
 }

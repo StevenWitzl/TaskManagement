@@ -25,6 +25,8 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             Email = DemoEmail,
+            FirstName = "Demo",
+            LastName = "User",
             PasswordHash = passwordHasher.Hash(DemoPassword),
             CreatedDate = DateTime.UtcNow
         };

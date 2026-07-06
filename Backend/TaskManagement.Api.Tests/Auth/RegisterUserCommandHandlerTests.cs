@@ -24,17 +24,37 @@ public class RegisterUserCommandHandlerTests : IDisposable
             NullLogger<RegisterUserCommandHandler>.Instance);
     }
 
+    private static RegisterUserCommand Command(
+        string email = "new@test.local",
+        string password = "Secret123!",
+        string firstName = "Ada",
+        string lastName = "Lovelace") => new(email, password, firstName, lastName);
+
     [Fact]
     public async Task Handle_CreatesUserWithHashedPasswordAndReturnsToken()
     {
-        var result = await _handler.Handle(new RegisterUserCommand("New@Test.Local", "Secret123!"), CancellationToken.None);
+        var result = await _handler.Handle(Command(email: "New@Test.Local"), CancellationToken.None);
 
         var user = Assert.Single(_db.Context.Users);
         Assert.Equal("new@test.local", user.Email); // normalized
+        Assert.Equal("Ada", user.FirstName);
+        Assert.Equal("Lovelace", user.LastName);
         Assert.NotEqual("Secret123!", user.PasswordHash); // never stored in plain text
         Assert.True(new Pbkdf2PasswordHasher().Verify("Secret123!", user.PasswordHash));
         Assert.Equal("test-token", result.Token);
         Assert.Equal(user.Id, result.UserId);
+        Assert.Equal("Ada", result.FirstName);
+        Assert.Equal("Lovelace", result.LastName);
+    }
+
+    [Fact]
+    public async Task Handle_TrimsNames()
+    {
+        await _handler.Handle(Command(firstName: "  Ada  ", lastName: "  Lovelace  "), CancellationToken.None);
+
+        var user = Assert.Single(_db.Context.Users);
+        Assert.Equal("Ada", user.FirstName);
+        Assert.Equal("Lovelace", user.LastName);
     }
 
     [Fact]
@@ -43,16 +63,16 @@ public class RegisterUserCommandHandlerTests : IDisposable
         _db.AddUser("taken@test.local");
 
         await Assert.ThrowsAsync<ConflictException>(() =>
-            _handler.Handle(new RegisterUserCommand("taken@test.local", "Secret123!"), CancellationToken.None));
+            _handler.Handle(Command(email: "taken@test.local"), CancellationToken.None));
     }
 
     [Theory]
-    [InlineData("", "Secret123!")]
-    [InlineData("   ", "Secret123!")]
-    public async Task Handle_ThrowsValidation_WhenEmailMissing(string email, string password)
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Handle_ThrowsValidation_WhenEmailMissing(string email)
     {
         await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(new RegisterUserCommand(email, password), CancellationToken.None));
+            _handler.Handle(Command(email: email), CancellationToken.None));
     }
 
     [Theory]
@@ -61,7 +81,18 @@ public class RegisterUserCommandHandlerTests : IDisposable
     public async Task Handle_ThrowsValidation_WhenPasswordTooShort(string password)
     {
         await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(new RegisterUserCommand("new@test.local", password), CancellationToken.None));
+            _handler.Handle(Command(password: password), CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData("", "Lovelace")]
+    [InlineData("   ", "Lovelace")]
+    [InlineData("Ada", "")]
+    [InlineData("Ada", "   ")]
+    public async Task Handle_ThrowsValidation_WhenNameMissing(string firstName, string lastName)
+    {
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            _handler.Handle(Command(firstName: firstName, lastName: lastName), CancellationToken.None));
     }
 
     public void Dispose() => _db.Dispose();

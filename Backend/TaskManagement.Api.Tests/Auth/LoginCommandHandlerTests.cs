@@ -42,6 +42,8 @@ public class LoginCommandHandlerTests : IDisposable
 
         Assert.Equal(user.Id, result.UserId);
         Assert.Equal("user@test.local", result.Email);
+        Assert.Equal(user.FirstName, result.FirstName);
+        Assert.Equal(user.LastName, result.LastName);
         Assert.Equal("test-token", result.Token);
     }
 

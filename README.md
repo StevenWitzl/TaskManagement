@@ -1,6 +1,6 @@
 # TaskManagement
 
-A small full-stack task manager: ASP.NET Core + SQLite on the back end, Angular on the front end, with a real-time task view over SignalR (WebSockets).
+A small full-stack task manager: ASP.NET Core + SQLite on the back end, React on the front end, with a real-time task view over SignalR (WebSockets).
 
 ## Quick start
 
@@ -33,11 +33,13 @@ TaskManagement/
 │   │   └── Middleware/                Exception → JSON error responses
 │   └── TaskManagement.Api.Tests/      xUnit + Moq unit tests (49 tests)
 ├── Frontend/
-│   └── task-manager/                  Angular app
-│       └── src/app/
-│           ├── pages/landing/         Sign in / create account
-│           ├── pages/tasks/           Task list fed by the SignalR subscription
-│           └── services/              AuthService, TaskService, RealtimeService
+│   └── task-manager/                  React app (Vite + TypeScript)
+│       └── src/
+│           ├── pages/Landing.tsx      Sign in / create account (incl. first/last name)
+│           ├── pages/Tasks.tsx        Task list fed by the SignalR subscription
+│           ├── AuthContext.tsx        Session state + login/register/logout
+│           ├── useRealtime.ts         SignalR connection → tasks state
+│           └── api.ts                 Fetch wrapper with bearer token
 ├── Run.cmd                            Build + launch both apps
 └── README.md
 ```
@@ -46,11 +48,13 @@ TaskManagement/
 
 **CQRS with MediatR.** Controllers accept DTOs and dispatch commands/queries through MediatR. Handlers map DTOs to EF Core entities, persist to SQLite, and raise a broadcast. Reads and writes are separate request types (`GetTasksQuery` vs `CreateTaskCommand`, `CompleteTaskCommand`, `ReorderTaskCommand`, `DeleteTaskCommand`).
 
-**Real-time view.** The Angular tasks page never polls: on connect, `TasksHub` pushes the user's full task list over the WebSocket, and every successful command re-broadcasts the updated list to that user's group. `RealtimeService` exposes it as an Angular signal that the page renders directly.
+**Real-time view.** The React tasks page never polls: on connect, `TasksHub` pushes the user's full task list over the WebSocket, and every successful command re-broadcasts the updated list to that user's group. The `useRealtime` hook exposes it as React state that the page renders directly.
 
-**Auth.** Register/login issue a JWT (passwords stored as PBKDF2 hashes). The token authenticates both HTTP calls (via an interceptor) and the SignalR connection (via query-string token). Each user only ever sees their own tasks.
+**Auth.** Registration requires email, password, and first/last name (all validated server-side); login issues a JWT (passwords stored as PBKDF2 hashes). The token authenticates both HTTP calls and the SignalR connection (via query-string token). Each user only ever sees their own tasks, and the signed-in user's name is shown in the header.
 
-**Task model.** `Order`, `Priority`, `Title`, `Description`, `CreatedDate` are required; `CompletedDate` and `CompletedDescription` are set when a task is completed. `Order` is kept contiguous per user across create/reorder/delete.
+**Task model.** `Order`, `Priority`, `Title`, `Description`, `CreatedDate` are required; `CompletedDate` (and an optional `CompletedDescription`) are set when a task is completed. `Order` is kept contiguous per user across create/reorder/delete — reordering is drag-and-drop in the UI.
+
+**UI.** Tasks are created through a modal (+ Create task). The header shows the signed-in user's name plus live counts: open tasks by priority (High/Medium/Low), completed, and outstanding.
 
 **Logging.** Standard `ILogger<T>` console logging throughout (auth events, task changes, SignalR connects, errors).
 
@@ -62,8 +66,8 @@ TaskManagement/
 | POST | `/api/auth/login` | Sign in, returns JWT |
 | GET | `/api/tasks` | Current user's tasks (ordered) |
 | POST | `/api/tasks` | Create a task (order auto-assigned) |
-| POST | `/api/tasks/{id}/complete` | Complete with a description |
-| POST | `/api/tasks/{id}/reorder` | Move to a new position |
+| POST | `/api/tasks/{id}/complete` | Complete with an optional description |
+| POST | `/api/tasks/{id}/reorder` | Move to a new position (drag & drop in the UI) |
 | DELETE | `/api/tasks/{id}` | Delete and renumber |
 | WS | `/hubs/tasks` | SignalR hub, pushes `TasksUpdated` |
 
@@ -86,5 +90,5 @@ dotnet run                          # http://localhost:5000
 # Frontend (separate terminal)
 cd Frontend\task-manager
 npm install
-npx ng serve                        # http://localhost:4200
+npm run dev                         # http://localhost:4200
 ```

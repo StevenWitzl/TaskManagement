@@ -34,6 +34,8 @@ public sealed class TestDb : IDisposable
         {
             Id = Guid.NewGuid(),
             Email = email,
+            FirstName = "Test",
+            LastName = "User",
             PasswordHash = "irrelevant",
             CreatedDate = DateTime.UtcNow
         };

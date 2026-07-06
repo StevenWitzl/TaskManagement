@@ -18,7 +18,9 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterRequestDto request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new RegisterUserCommand(request.Email, request.Password), cancellationToken);
+        var result = await _mediator.Send(
+            new RegisterUserCommand(request.Email, request.Password, request.FirstName, request.LastName),
+            cancellationToken);
         return Ok(result);
     }
 
