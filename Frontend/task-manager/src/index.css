@@ -12,6 +12,7 @@ body {
 button {
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 input,
@@ -22,6 +23,14 @@ textarea {
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
+}
+
+textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: 4.5rem;
+  /* Vertical-only resize so the box can't be dragged wider than the modal. */
+  resize: vertical;
 }
 
 input:focus,
@@ -55,13 +64,20 @@ form {
   flex: 1;
 }
 
-.primary {
+/* All button variants share the same box (padding + 1px border) so they line
+   up at identical heights whether or not they have a visible border. */
+.primary,
+.ghost,
+.danger {
   padding: 0.55rem 1rem;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 8px;
+  font-weight: 600;
+}
+
+.primary {
   background: #1d4ed8;
   color: #fff;
-  font-weight: 600;
   align-self: flex-start;
 }
 
@@ -71,19 +87,17 @@ form {
 }
 
 .ghost {
-  padding: 0.45rem 0.9rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border-color: #cbd5e1;
   background: #fff;
   color: #334155;
+  font-weight: 500;
 }
 
 .danger {
-  padding: 0.45rem 0.9rem;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-color: #fecaca;
   background: #fff;
   color: #dc2626;
+  font-weight: 500;
 }
 
 .error {
@@ -257,16 +271,6 @@ textarea[aria-invalid='true']:focus {
 .stat.p-0 {
   background: #f1f5f9;
   color: #475569;
-}
-
-.stat.done {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.stat.open {
-  background: #dbeafe;
-  color: #1d4ed8;
 }
 
 .status {
@@ -473,11 +477,15 @@ textarea[aria-invalid='true']:focus {
   gap: 0.5rem;
   margin-top: 0.75rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
-.complete-form input {
-  flex: 1;
-  min-width: 200px;
+/* Complete + Cancel: a matched pair — same height (shared button box) and
+   equal width via a common min-width, centered against the input column. */
+.complete-form .primary,
+.complete-form .ghost {
+  align-self: center;
+  min-width: 7rem;
 }
 
 @media (max-width: 560px) {

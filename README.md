@@ -59,7 +59,7 @@ TaskManagement/
 
 **Task model.** `Order`, `Priority`, `Title`, `Description`, `CreatedDate` are required; `CompletedDate` (and an optional `CompletedDescription`) are set when a task is completed. `Order` only applies to open tasks and is always contiguous from 1 — completing, deleting, or reordering renumbers the open list. Completed tasks drop out of the numbering and are shown in completion order. Reordering is drag-and-drop in the UI.
 
-**UI.** Tasks are created through a modal (+ Create task). The header shows the signed-in user's name plus live counts: open tasks by priority (High/Medium/Low), completed, and outstanding.
+**UI.** Tasks are created through a modal (+ Create task). The header shows the signed-in user's name plus a live count of open tasks by priority (High/Medium/Low).
 
 **Logging.** Standard `ILogger<T>` console logging throughout (auth events, task changes, SignalR connects, errors).
 

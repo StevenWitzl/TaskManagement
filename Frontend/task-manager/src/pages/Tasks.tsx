@@ -137,8 +137,6 @@ export function Tasks() {
             <span className="stat p-2">High {countByPriority(Priority.High)}</span>
             <span className="stat p-1">Medium {countByPriority(Priority.Medium)}</span>
             <span className="stat p-0">Low {countByPriority(Priority.Low)}</span>
-            <span className="stat done">Completed {completedTasks.length}</span>
-            <span className="stat open">Outstanding {openTasks.length}</span>
           </div>
         </div>
         <div className="topbar-right">
