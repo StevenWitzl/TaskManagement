@@ -2,11 +2,11 @@
   "profiles": {
     "TaskManagement.Api": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:51432;http://localhost:51433"
+      "applicationUrl": "http://localhost:5000"
     }
   }
 }

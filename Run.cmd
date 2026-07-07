@@ -8,7 +8,19 @@ if errorlevel 1 goto :fail
 
 echo.
 echo === Launching backend on http://localhost:5000 ===
-start "TaskManagement API" cmd /k dotnet run --project "Backend\TaskManagement.Api" --no-build
+REM --no-launch-profile ignores launchSettings.json; ASPNETCORE_URLS pins the port
+REM so the backend always binds http://localhost:5000 (matches CORS + the frontend).
+start "TaskManagement API" cmd /k "cd /d "%~dp0Backend\TaskManagement.Api" && set ASPNETCORE_ENVIRONMENT=Development&& set ASPNETCORE_URLS=http://localhost:5000&& dotnet run --no-build --no-launch-profile"
+
+echo.
+echo === Waiting for the backend to respond on http://localhost:5000 ... ===
+for /l %%i in (1,1,40) do (
+    curl -s -o nul http://localhost:5000/api/auth/login >nul 2>&1 && goto :backend_ready
+    timeout /t 1 /nobreak >nul
+)
+echo WARNING: the backend did not respond within 40s.
+echo          Check the "TaskManagement API" window for errors before using the app.
+:backend_ready
 
 echo.
 echo === Building frontend ===
