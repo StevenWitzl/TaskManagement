@@ -1,8 +1,17 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import { LIMITS } from '../models'
 
 type Mode = 'signin' | 'register'
+
+interface FieldErrors {
+  email?: string
+  password?: string
+  firstName?: string
+  lastName?: string
+  form?: string
+}
 
 export function Landing() {
   const { login, register } = useAuth()
@@ -13,37 +22,50 @@ export function Landing() {
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<FieldErrors>({})
   const [busy, setBusy] = useState(false)
 
   const switchMode = (next: Mode) => {
     setMode(next)
-    setError(null)
+    setErrors({})
   }
+
+  const clearError = (field: keyof FieldErrors) =>
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
 
-    if (!email.trim() || !password) {
-      setError('Email and password are required.')
-      return
+    const next: FieldErrors = {}
+    if (!email.trim()) {
+      next.email = 'Email is required.'
     }
-    if (mode === 'register' && (!firstName.trim() || !lastName.trim())) {
-      setError('First and last name are required.')
+    if (!password) {
+      next.password = 'Password is required.'
+    }
+    if (mode === 'register') {
+      if (!firstName.trim()) next.firstName = 'First name is required.'
+      if (!lastName.trim()) next.lastName = 'Last name is required.'
+      if (password && password.length < LIMITS.passwordMin) {
+        next.password = `Password must be at least ${LIMITS.passwordMin} characters.`
+      }
+    }
+    if (next.email || next.password || next.firstName || next.lastName) {
+      setErrors(next)
       return
     }
 
     setBusy(true)
-    setError(null)
+    setErrors({})
     try {
       if (mode === 'signin') {
-        await login(email, password)
+        await login(email.trim(), password)
       } else {
-        await register(email, password, firstName, lastName)
+        await register(email.trim(), password, firstName.trim(), lastName.trim())
       }
       navigate('/tasks')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setErrors({ form: err instanceof Error ? err.message : 'Something went wrong. Please try again.' })
     } finally {
       setBusy(false)
     }
@@ -64,7 +86,7 @@ export function Landing() {
           </button>
         </div>
 
-        <form onSubmit={submit}>
+        <form onSubmit={submit} noValidate>
           {mode === 'register' && (
             <div className="row">
               <label className="grow">
@@ -72,22 +94,32 @@ export function Landing() {
                 <input
                   name="firstName"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => {
+                    setFirstName(e.target.value)
+                    clearError('firstName')
+                  }}
                   placeholder="Ada"
                   autoComplete="given-name"
-                  required
+                  maxLength={LIMITS.nameMax}
+                  aria-invalid={!!errors.firstName}
                 />
+                {errors.firstName && <span className="field-error">{errors.firstName}</span>}
               </label>
               <label className="grow">
                 Last name
                 <input
                   name="lastName"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(e) => {
+                    setLastName(e.target.value)
+                    clearError('lastName')
+                  }}
                   placeholder="Lovelace"
                   autoComplete="family-name"
-                  required
+                  maxLength={LIMITS.nameMax}
+                  aria-invalid={!!errors.lastName}
                 />
+                {errors.lastName && <span className="field-error">{errors.lastName}</span>}
               </label>
             </div>
           )}
@@ -98,11 +130,16 @@ export function Landing() {
               type="email"
               name="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                clearError('email')
+              }}
               placeholder="you@example.com"
               autoComplete="email"
-              required
+              maxLength={LIMITS.emailMax}
+              aria-invalid={!!errors.email}
             />
+            {errors.email && <span className="field-error">{errors.email}</span>}
           </label>
 
           <label>
@@ -111,14 +148,18 @@ export function Landing() {
               type="password"
               name="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === 'register' ? 'At least 6 characters' : 'Your password'}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                clearError('password')
+              }}
+              placeholder={mode === 'register' ? `At least ${LIMITS.passwordMin} characters` : 'Your password'}
               autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-              required
+              aria-invalid={!!errors.password}
             />
+            {errors.password && <span className="field-error">{errors.password}</span>}
           </label>
 
-          {error && <p className="error">{error}</p>}
+          {errors.form && <p className="error">{errors.form}</p>}
 
           <button className="primary" type="submit" disabled={busy}>
             {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}

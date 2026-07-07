@@ -23,6 +23,16 @@ export interface TaskDto {
   completedDescription: string | null
 }
 
+// Mirrors the backend FluentValidation rules (AuthValidators / TaskValidators).
+export const LIMITS = {
+  titleMin: 5,
+  titleMax: 200,
+  descriptionMax: 2000,
+  nameMax: 100,
+  emailMax: 256,
+  passwordMin: 6,
+} as const
+
 export interface AuthResponse {
   userId: string
   email: string

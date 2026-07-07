@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { apiFetch } from '../api'
 import { useAuth } from '../AuthContext'
 import { useRealtime } from '../useRealtime'
-import { PRIORITY_LABELS, Priority, type TaskDto } from '../models'
+import { LIMITS, PRIORITY_LABELS, Priority, type TaskDto } from '../models'
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
@@ -18,6 +18,8 @@ export function Tasks() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<Priority>(Priority.Medium)
+  // Per-field validation messages for the create-task modal; `form` holds a server error.
+  const [addErrors, setAddErrors] = useState<{ title?: string; description?: string; form?: string }>({})
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null)
   const [completionDescription, setCompletionDescription] = useState('')
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -41,20 +43,39 @@ export function Tasks() {
     setTitle('')
     setDescription('')
     setPriority(Priority.Medium)
-    setError(null)
+    setAddErrors({})
     setShowAddModal(true)
   }
 
   const addTask = async (event: FormEvent) => {
     event.preventDefault()
-    if (!title.trim() || !description.trim()) {
-      setError('Title and description are required.')
+    // Validate the trimmed values — spaces can't satisfy a minimum length.
+    const trimmedTitle = title.trim()
+    const trimmedDescription = description.trim()
+    const errors: typeof addErrors = {}
+    if (!trimmedTitle) {
+      errors.title = 'Title is required.'
+    } else if (trimmedTitle.length < LIMITS.titleMin) {
+      errors.title = `Title must be at least ${LIMITS.titleMin} characters.`
+    }
+    if (!trimmedDescription) {
+      errors.description = 'Description is required.'
+    }
+    if (errors.title || errors.description) {
+      setAddErrors(errors)
       return
     }
-    await run(async () => {
-      await apiFetch('/api/tasks', { method: 'POST', body: { title, description, priority }, token })
+
+    try {
+      await apiFetch('/api/tasks', {
+        method: 'POST',
+        body: { title: trimmedTitle, description: trimmedDescription, priority },
+        token,
+      })
       setShowAddModal(false)
-    })
+    } catch (err) {
+      setAddErrors({ form: err instanceof Error ? err.message : 'Something went wrong. Please try again.' })
+    }
   }
 
   const confirmComplete = async (task: TaskDto) => {
@@ -167,12 +188,18 @@ export function Tasks() {
 
                 {completingTaskId === task.id ? (
                   <div className="complete-form">
-                    <input
-                      name="completionDescription"
-                      value={completionDescription}
-                      onChange={(e) => setCompletionDescription(e.target.value)}
-                      placeholder="How was it completed? (optional)"
-                    />
+                    <div className="complete-input">
+                      <input
+                        name="completionDescription"
+                        value={completionDescription}
+                        onChange={(e) => setCompletionDescription(e.target.value)}
+                        placeholder="How was it completed? (optional)"
+                        maxLength={LIMITS.descriptionMax}
+                      />
+                      <span className="char-count">
+                        {completionDescription.length}/{LIMITS.descriptionMax}
+                      </span>
+                    </div>
                     <button type="button" className="primary" onClick={() => confirmComplete(task)}>
                       Complete
                     </button>
@@ -240,18 +267,23 @@ export function Tasks() {
                 ×
               </button>
             </div>
-            <form onSubmit={addTask}>
+            <form onSubmit={addTask} noValidate>
               <div className="row">
                 <label className="grow">
                   Title
                   <input
                     name="title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="What needs doing?"
+                    onChange={(e) => {
+                      setTitle(e.target.value)
+                      if (addErrors.title) setAddErrors((prev) => ({ ...prev, title: undefined }))
+                    }}
+                    placeholder={`What needs doing? (at least ${LIMITS.titleMin} characters)`}
+                    maxLength={LIMITS.titleMax}
+                    aria-invalid={!!addErrors.title}
                     autoFocus
-                    required
                   />
+                  {addErrors.title && <span className="field-error">{addErrors.title}</span>}
                 </label>
                 <label>
                   Priority
@@ -267,12 +299,27 @@ export function Tasks() {
                 <textarea
                   name="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    setDescription(e.target.value)
+                    if (addErrors.description) setAddErrors((prev) => ({ ...prev, description: undefined }))
+                  }}
                   rows={3}
                   placeholder="Add some detail…"
-                  required
+                  maxLength={LIMITS.descriptionMax}
+                  aria-invalid={!!addErrors.description}
                 />
+                <div className="field-footer">
+                  {addErrors.description ? (
+                    <span className="field-error">{addErrors.description}</span>
+                  ) : (
+                    <span />
+                  )}
+                  <span className="char-count">
+                    {description.length}/{LIMITS.descriptionMax}
+                  </span>
+                </div>
               </label>
+              {addErrors.form && <p className="error">{addErrors.form}</p>}
               <div className="modal-actions">
                 <button type="button" className="ghost" onClick={() => setShowAddModal(false)}>
                   Cancel

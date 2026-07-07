@@ -2,20 +2,36 @@ using FluentValidation;
 
 namespace TaskManagement.Api.Application.Auth;
 
+// Length rules validate the trimmed value: the handler trims before saving, so
+// leading/trailing whitespace can't be used to satisfy a rule.
 public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
 {
+    public const int EmailMaxLength = 256;
+    public const int NameMaxLength = 100;
+    public const int PasswordMinLength = 6;
+
     public RegisterUserCommandValidator()
     {
         RuleFor(c => c.Email)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("Email must be a valid email address.");
+            .EmailAddress().WithMessage("Email must be a valid email address.")
+            .Must(e => e.Trim().Length <= EmailMaxLength).WithMessage($"Email must be {EmailMaxLength} characters or fewer.");
+
         RuleFor(c => c.Password)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("Password is required.")
-            .MinimumLength(6).WithMessage("Password must be at least 6 characters.");
+            .MinimumLength(PasswordMinLength).WithMessage($"Password must be at least {PasswordMinLength} characters.");
+
         RuleFor(c => c.FirstName)
-            .Must(name => !string.IsNullOrWhiteSpace(name)).WithMessage("First name is required.");
+            .Cascade(CascadeMode.Stop)
+            .Must(n => !string.IsNullOrWhiteSpace(n)).WithMessage("First name is required.")
+            .Must(n => n.Trim().Length <= NameMaxLength).WithMessage($"First name must be {NameMaxLength} characters or fewer.");
+
         RuleFor(c => c.LastName)
-            .Must(name => !string.IsNullOrWhiteSpace(name)).WithMessage("Last name is required.");
+            .Cascade(CascadeMode.Stop)
+            .Must(n => !string.IsNullOrWhiteSpace(n)).WithMessage("Last name is required.")
+            .Must(n => n.Trim().Length <= NameMaxLength).WithMessage($"Last name must be {NameMaxLength} characters or fewer.");
     }
 }
 

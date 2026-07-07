@@ -29,10 +29,32 @@ public class CreateTaskCommandValidatorTests
         Assert.False(_validator.Validate(Command(title: title, description: description)).IsValid);
     }
 
+    [Theory]
+    [InlineData("Test")] // 4 chars
+    [InlineData("  abc  ")] // 3 after trim — whitespace can't pad the minimum
+    public void Short_title_fails(string title)
+    {
+        Assert.False(_validator.Validate(Command(title: title)).IsValid);
+    }
+
+    [Theory]
+    [InlineData("Tests")] // exactly 5
+    [InlineData("  12345  ")] // 5 after trim
+    public void Title_of_five_trimmed_chars_passes(string title)
+    {
+        Assert.True(_validator.Validate(Command(title: title)).IsValid);
+    }
+
     [Fact]
     public void Overlong_title_fails()
     {
         Assert.False(_validator.Validate(Command(title: new string('x', 201))).IsValid);
+    }
+
+    [Fact]
+    public void Overlong_description_fails()
+    {
+        Assert.False(_validator.Validate(Command(description: new string('x', 2001))).IsValid);
     }
 
     [Fact]

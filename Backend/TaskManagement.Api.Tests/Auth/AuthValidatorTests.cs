@@ -45,6 +45,21 @@ public class RegisterUserCommandValidatorTests
     {
         Assert.False(_validator.Validate(Command(firstName: firstName, lastName: lastName)).IsValid);
     }
+
+    [Fact]
+    public void Overlong_names_fail()
+    {
+        var longName = new string('x', 101);
+        Assert.False(_validator.Validate(Command(firstName: longName)).IsValid);
+        Assert.False(_validator.Validate(Command(lastName: longName)).IsValid);
+    }
+
+    [Fact]
+    public void Overlong_email_fails()
+    {
+        var email = new string('x', 250) + "@test.local"; // > 256 total
+        Assert.False(_validator.Validate(Command(email: email)).IsValid);
+    }
 }
 
 public class LoginCommandValidatorTests
