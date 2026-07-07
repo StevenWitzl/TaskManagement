@@ -23,6 +23,8 @@ public class RegisterUserCommandValidatorTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("not-an-email")]
+    [InlineData("asefasefasef")]
+    [InlineData("missing@atsign")]
     public void Invalid_email_fails(string email)
     {
         Assert.False(_validator.Validate(Command(email: email)).IsValid);
@@ -46,12 +48,27 @@ public class RegisterUserCommandValidatorTests
         Assert.False(_validator.Validate(Command(firstName: firstName, lastName: lastName)).IsValid);
     }
 
+    [Theory]
+    [InlineData("A", "Lovelace")] // 1 char first name
+    [InlineData(" a ", "Lovelace")] // 1 char after trim
+    [InlineData("Ada", "B")] // 1 char last name
+    public void Too_short_name_fails(string firstName, string lastName)
+    {
+        Assert.False(_validator.Validate(Command(firstName: firstName, lastName: lastName)).IsValid);
+    }
+
     [Fact]
     public void Overlong_names_fail()
     {
-        var longName = new string('x', 101);
+        var longName = new string('x', 51); // one over the 50 max
         Assert.False(_validator.Validate(Command(firstName: longName)).IsValid);
         Assert.False(_validator.Validate(Command(lastName: longName)).IsValid);
+    }
+
+    [Fact]
+    public void Names_at_min_and_max_boundaries_pass()
+    {
+        Assert.True(_validator.Validate(Command(firstName: "Jo", lastName: new string('x', 50))).IsValid);
     }
 
     [Fact]

@@ -23,6 +23,8 @@ textarea {
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
+  /* Don't let the input's default intrinsic width force a flex parent wider. */
+  min-width: 0;
 }
 
 textarea {
@@ -62,6 +64,9 @@ form {
 
 .grow {
   flex: 1;
+  /* Allow the field to shrink below the input's intrinsic width so two
+     side-by-side inputs divide the row evenly instead of overflowing. */
+  min-width: 0;
 }
 
 /* All button variants share the same box (padding + 1px border) so they line

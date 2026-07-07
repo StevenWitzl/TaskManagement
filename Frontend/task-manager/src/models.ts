@@ -28,10 +28,16 @@ export const LIMITS = {
   titleMin: 5,
   titleMax: 200,
   descriptionMax: 2000,
-  nameMax: 100,
+  nameMin: 2,
+  nameMax: 50,
   emailMax: 256,
   passwordMin: 6,
 } as const
+
+// Matches the same shape the backend accepts: text@text.text, no spaces.
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export const isValidEmail = (value: string) => EMAIL_REGEX.test(value.trim())
 
 export interface AuthResponse {
   userId: string

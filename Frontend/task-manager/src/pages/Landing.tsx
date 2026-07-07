@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
-import { LIMITS } from '../models'
+import { LIMITS, isValidEmail } from '../models'
 
 type Mode = 'signin' | 'register'
 
@@ -39,13 +39,19 @@ export function Landing() {
     const next: FieldErrors = {}
     if (!email.trim()) {
       next.email = 'Email is required.'
+    } else if (!isValidEmail(email)) {
+      next.email = 'Enter a valid email address.'
     }
     if (!password) {
       next.password = 'Password is required.'
     }
     if (mode === 'register') {
-      if (!firstName.trim()) next.firstName = 'First name is required.'
-      if (!lastName.trim()) next.lastName = 'Last name is required.'
+      const first = firstName.trim()
+      const last = lastName.trim()
+      if (!first) next.firstName = 'First name is required.'
+      else if (first.length < LIMITS.nameMin) next.firstName = `First name must be at least ${LIMITS.nameMin} characters.`
+      if (!last) next.lastName = 'Last name is required.'
+      else if (last.length < LIMITS.nameMin) next.lastName = `Last name must be at least ${LIMITS.nameMin} characters.`
       if (password && password.length < LIMITS.passwordMin) {
         next.password = `Password must be at least ${LIMITS.passwordMin} characters.`
       }
